@@ -77,6 +77,4 @@ app.post("/api/plan", async (req, res) => {
   }
 });
 
-app.use(express.static(path.join(root, "dist")));
-app.get("*", (_req, res) => res.sendFile(path.join(root, "dist", "index.html")));
-app.listen(port, () => console.log(`Roamwise is running at http://localhost:${port}`));
+export default app;
