@@ -11,6 +11,8 @@ npm start
 
 Open [http://localhost:3000](http://localhost:3000). For a real model response, set `OPENROUTER_API_KEY` before starting the server. An optional `OPENROUTER_MODEL` can select another OpenRouter model. Without a key, the app uses a short built-in Kyoto plan so the UI can be evaluated offline.
 
+For Vercel, deploy the repository with `npm run build` as the build command and `dist` as the output directory. The `/api/plan` function is provided by `api/plan.js`; add `OPENROUTER_API_KEY` in the Vercel project environment variables for live model responses.
+
 ## Usage
 
 Describe a trip in the prompt, choose a suggestion, and select **Plan my trip**. Expand a stop to read its note, move it up or down, or remove it. **Refine with AI** puts a follow-up prompt into the composer, and the moon button toggles dark mode.
