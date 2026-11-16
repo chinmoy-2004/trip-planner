@@ -58,9 +58,13 @@ function App() {
       try {
         payload = body ? JSON.parse(body) : {};
       } catch {
+        console.error("[planner] API returned non-JSON", { status: response.status, body: body.slice(0, 500) });
         throw new Error(`The planner service returned an invalid response (${response.status}).`);
       }
-      if (!response.ok) throw new Error(payload.error || "We couldn't create that plan.");
+      if (!response.ok) {
+        console.error("[planner] API request failed", { status: response.status, payload });
+        throw new Error(payload.details ? `${payload.error} (${payload.details})` : payload.error || "We couldn't create that plan.");
+      }
       if (id !== requestId.current) return;
       setPlan(normalisePlan(payload));
     } catch (err) {

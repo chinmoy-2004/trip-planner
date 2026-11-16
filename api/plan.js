@@ -95,7 +95,10 @@ export default async function handler(req, res) {
     }
     return res.status(200).json(extractJson(content));
   } catch (error) {
-    console.error(error);
-    return res.status(502).json({ error: "The travel model returned an unusable plan. Try again." });
+    console.error("[planner] Gemini request failed", error);
+    return res.status(502).json({
+      error: "The travel model returned an unusable plan. Try again.",
+      details: error instanceof Error ? error.message : "Unknown Gemini error."
+    });
   }
 }
