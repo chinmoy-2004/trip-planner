@@ -41,9 +41,10 @@ function extractJson(text) {
 }
 
 function getGeminiModel() {
-  return (process.env.OPENROUTER_MODEL || "gemini-2.0-flash")
+  const model = (process.env.OPENROUTER_MODEL || "gemini-2.0-flash")
     .replace(/^google\//, "")
     .replace(/:free$/, "");
+  return model === "gemini-2.0-flash-exp" ? "gemini-2.0-flash" : model;
 }
 
 app.post("/api/plan", async (req, res) => {
@@ -70,13 +71,23 @@ app.post("/api/plan", async (req, res) => {
         generationConfig: { temperature: 0.4, responseMimeType: "application/json" }
       })
     });
-    if (!response.ok) throw new Error(`Model request failed (${response.status})`);
-    const data = await response.json();
+    const body = await response.text();
+    let data;
+    try {
+      data = body ? JSON.parse(body) : {};
+    } catch {
+      throw new Error(`Gemini returned a non-JSON response (${response.status}).`);
+    }
+    if (!response.ok) {
+      throw new Error(data.error?.message || `Gemini request failed (${response.status}).`);
+    }
     const content = data.candidates?.[0]?.content?.parts
       ?.map((part) => part.text)
       .filter(Boolean)
       .join("");
-    if (typeof content !== "string") throw new Error("The model returned an empty response.");
+    if (typeof content !== "string" || !content.trim()) {
+      throw new Error("Gemini returned no candidate content.");
+    }
     return res.json(extractJson(content));
   } catch (error) {
     console.error(error);
