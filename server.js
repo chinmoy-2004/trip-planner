@@ -7,6 +7,7 @@ const port = process.env.PORT || 3000;
 const root = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(express.json({ limit: "20kb" }));
+app.use(express.static(path.join(root, "dist")));
 
 const demoPlan = {
   title: "A thoughtful weekend in Kyoto",
@@ -75,6 +76,15 @@ app.post("/api/plan", async (req, res) => {
     console.error(error);
     return res.status(502).json({ error: "The travel model returned an unusable plan. Try again." });
   }
+});
+
+app.get("*", (req, res, next) => {
+  if (req.path.startsWith("/api/")) return next();
+  return res.sendFile(path.join(root, "dist", "index.html"));
+});
+
+app.listen(port, () => {
+  console.log(`Roamwise listening on port ${port}`);
 });
 
 export default app;

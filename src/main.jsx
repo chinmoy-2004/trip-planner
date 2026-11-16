@@ -53,7 +53,13 @@ function App() {
     setLoading(true); setError(""); setPlan(null);
     try {
       const response = await fetch("/api/plan", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ prompt }) });
-      const payload = await response.json();
+      const body = await response.text();
+      let payload;
+      try {
+        payload = body ? JSON.parse(body) : {};
+      } catch {
+        throw new Error(`The planner service returned an invalid response (${response.status}).`);
+      }
       if (!response.ok) throw new Error(payload.error || "We couldn't create that plan.");
       if (id !== requestId.current) return;
       setPlan(normalisePlan(payload));
