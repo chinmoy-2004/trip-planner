@@ -40,6 +40,12 @@ function extractJson(text) {
   return JSON.parse(candidate.slice(start, end + 1));
 }
 
+function getGeminiModel() {
+  return (process.env.OPENROUTER_MODEL || "gemini-2.0-flash")
+    .replace(/^google\//, "")
+    .replace(/:free$/, "");
+}
+
 app.post("/api/plan", async (req, res) => {
   const prompt = typeof req.body?.prompt === "string" ? req.body.prompt.trim() : "";
   if (!prompt) return res.status(400).json({ error: "Tell us where you want to go first." });
@@ -50,26 +56,26 @@ app.post("/api/plan", async (req, res) => {
   }
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const model = getGeminiModel();
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(process.env.OPENROUTER_API_KEY)}`, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "Roamwise Trip Planner"
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: process.env.OPENROUTER_MODEL || "google/gemini-2.0-flash-exp:free",
-        temperature: 0.4,
-        messages: [
-          { role: "system", content: "You create practical travel itineraries. Return ONLY valid JSON matching this shape: {title:string,summary:string,destination:string,duration:string,days:[{day:number,title:string,mood:string,stops:[{id:string,time:string,title:string,location:string,type:string,duration:string,note:string}]}]}. Include 2-4 realistic stops per day. Never use markdown." },
-          { role: "user", content: prompt }
-        ]
+        systemInstruction: {
+          parts: [{ text: "You create practical travel itineraries. Return ONLY valid JSON matching this shape: {title:string,summary:string,destination:string,duration:string,days:[{day:number,title:string,mood:string,stops:[{id:string,time:string,title:string,location:string,type:string,duration:string,note:string}]}]}. Include 2-4 realistic stops per day. Never use markdown." }]
+        },
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.4, responseMimeType: "application/json" }
       })
     });
     if (!response.ok) throw new Error(`Model request failed (${response.status})`);
     const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
+    const content = data.candidates?.[0]?.content?.parts
+      ?.map((part) => part.text)
+      .filter(Boolean)
+      .join("");
     if (typeof content !== "string") throw new Error("The model returned an empty response.");
     return res.json(extractJson(content));
   } catch (error) {

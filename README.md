@@ -9,9 +9,9 @@ npm install
 npm start
 ```
 
-Open [http://localhost:3000](http://localhost:3000). For a real model response, set `OPENROUTER_API_KEY` before starting the server. An optional `OPENROUTER_MODEL` can select another OpenRouter model. Without a key, the app uses a short built-in Kyoto plan so the UI can be evaluated offline.
+Open [http://localhost:3000](http://localhost:3000). For a real Gemini response, set `OPENROUTER_API_KEY` to a Google AI API key before starting the server. An optional `OPENROUTER_MODEL` selects the Gemini model; values such as `google/gemini-2.0-flash-exp:free` are normalized automatically. Without a key, the app uses a short built-in Kyoto plan so the UI can be evaluated offline.
 
-For Vercel, deploy the repository with `npm run build` as the build command and `dist` as the output directory. The `/api/plan` function is provided by `api/plan.js`; add `OPENROUTER_API_KEY` in the Vercel project environment variables for live model responses.
+For Vercel, deploy the repository with `npm run build` as the build command and `dist` as the output directory. The `/api/plan` function is provided by `api/plan.js`; add a Google AI API key as `OPENROUTER_API_KEY` in the Vercel project environment variables for live Gemini responses.
 
 ## Usage
 
